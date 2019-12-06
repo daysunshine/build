@@ -1,0 +1,66 @@
+
+.logs .ant-modal-content {
+    position: relative;
+    background-color: #fff;
+    width: 1400px;
+    height: 700px;
+    padding: 5px;
+    left:1;
+    right:100%;
+    
+    border: 0;
+    border-radius: 10px;
+    -webkit-box-shadow: 0 100px 50px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 50px 50px rgba(0, 0, 0, 0.15);
+}
+.logs .ant-modal {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 14px;
+    font-variant: tabular-nums;
+    line-height: 1.5;
+    list-style: none;
+    -webkit-font-feature-settings: 'tnum';
+    font-feature-settings: 'tnum';
+    position: relative;
+    top: 100px;
+    /* width: auto; */
+    margin-left:250px;
+    margin-right:auto;
+    padding-bottom: 24px;
+}
+.logs .ant-modal-confirm .ant-modal-body {
+    padding: 10px 32px 24px;
+}
+.logs .ant-modal-confirm-body .ant-modal-confirm-title {
+    display: block;
+    overflow: hidden;
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.4;
+}
+.logs .ant-modal-confirm-body .ant-modal-confirm-content {
+    margin-top: 12px;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 14px;
+}
+.logs .ant-modal-confirm-body > .anticon + .ant-modal-confirm-title + .ant-modal-confirm-content {
+    margin-left: 5px;
+}
+.logs textarea.ant-input {
+    max-width: 100%;
+    height: auto;
+    min-height: 32px;
+    vertical-align: bottom;
+    -webkit-transition: all 0.3s, height 0s;
+    -o-transition: all 0.3s, height 0s;
+    transition: all 0.3s, height 0s;
+}
+/* .logs .ant-modal-confirm .ant-modal-confirm-btns {
+    float: right;
+    top: 24px;
+} */
