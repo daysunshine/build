@@ -133,6 +133,138 @@ def build():
 
     return jsonify(message={'build_msg':build_msg,'depoly_msg':depoly_msg})
 
+@app.route('/api/post/testurl', methods=["POST"])
+@auth.login_required
+def fortest():
+    payload = request.json
+    testurl = payload.get("testurl",None)
+    if testurl:
+        try:
+            response = requests.get(testurl)
+            status = response.status_code
+        except Exception as e:
+            print(e)
+            abort(Response('failed', status=status))
+    else:
+        abort(Response('None', status=400))
+    return Response('success', status=status)
+
+
+#获取主机中已创建的container列表
+@app.route('/api/docker/list',methods=["GET"])
+@auth.login_required
+def dk_list():
+    user_id = g.user.id
+    clist = session.query(Post).filter(Post.author_id == user_id).all()
+    # print('clist------',clist)
+    return jsonify(posts=[
+        {'project_name': l.project_name,
+         'svn_url': l.svn_url,
+         # 'container_name':l.container_name,
+         'ctr_name': l.container_name,
+         'ctr_id': l.container_id,
+         # 'status':[l.state]
+         'ctr_port':l.port,
+         'status': l.state
+         } for l in clist])
+
+# 处理docker container 启动、停止、删除   docker start
+@app.route('/api/post/images',methods=["POST"])
+@auth.login_required
+def images():
+    payload = request.args
+    id = g.user.id
+    action = payload.get('action')
+    container_id = payload.get('ctrid')
+    with Docker() as dk:
+        if action == 'start':
+            dk.start(container_id)
+        elif action == 'stop':
+            dk.stop(container_id)
+        elif action == 'delete':
+            dk.delete(container_id)
+
+    #数据库操作未同步更新
+    user = session.query(User).filter(User.id == id).first()
+
+#获取对应用户svn的仓库地址
+@app.route('/api/paths',methods=["GET"])
+@auth.login_required
+def get_path():
+    user_id = g.user.id
+    paths = session.query(User.id,Url.name, Url.uid,Url.path).join(R_User_Url, R_User_Url.user_id == User.id).\
+        join(Url,R_User_Url.url_id == Url.id).filter(User.id == user_id).all()
+
+    return jsonify(path=[
+        {'pro_name':name,
+         'p_uid':uid,
+         'spath':url
+         } for _,name,uid,url in paths])
+
+@app.route('/api/docker/build',methods=["POST"])
+@auth.login_required
+def code2build():
+    payload = request.json
+    user_id = g.user.id
+    puid = payload.get('p_uid',0)
+    try:
+        user = session.query(User.name, User.spwd, Url.path ,Url.aliasname).join(R_User_Url, R_User_Url.user_id == User.id).\
+            join(Url,R_User_Url.url_id == Url.id).filter(User.id == user_id).filter(Url.uid == puid).first()
+    except Exception as e:
+        abort(Response(e,status=400))
+    # print('---user----',user)
+    if user :
+        username = user[0]
+        spwd = dencryption(user[1])
+        path = user[2]
+        proname = user[3] #Url.aliasname 非汉字
+        # logging.info('********',username,path,proname)
+        ssh = SSH()
+        try:
+            ssh.conn(DK_ADDRESS, 'build', 'Nl1I!kqSE$U39H*WJHv') #连接build进行打包
+            for ss in ssh.line_buffered(ssh.Execmd('bash /home/build/code2build.sh {} {} {}'.format(path, username, spwd))):
+                print(ss)
+        except Exception as e:
+            logging.error(e)
+            abort(Response('connect error',status=500))
+        # docker 构建 镜像
+        try:
+            with Docker() as dk:
+                dk.build(username)
+                dk.create_docker(username,proname)
+                container_id = dk.container.id[:12]
+                container_name = dk.container.name
+                container_port = dk.fin_port
+        except Exception as e:
+            logging.error(e)
+            abort(Response(e,status=500))
+
+        post = Post()
+        try:
+            post.svn_url = path #url path
+            post.project_name = proname  #Url.aliasname
+            post.author_id = g.user.id
+            post.container_name = container_name
+            post.container_id = container_id
+            post.port = container_port
+        except Exception as e:
+            logging.error(e)
+
+        session.add(post)
+
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            with Docker() as dk:
+                dk.delete(container_id)
+            abort(Response(e,status=500))
+        return Response(status=200)
+        # web_url = '{}:{}'.format(dkcfg.LOCAL_HOST, container_port)
+    else:
+        abort(Response('not found!',status=400))
+    
+    
 
 #认证函数
 @auth.verify_password

@@ -118,13 +118,5 @@ def encryption(text):
 
 
 
-# aa = encryption('jX2ec2Rd')
-#
-# print(aa)
-#
-#
-# bb = dencryption(aa)
-# print(bb)
-#
-#
+
 
