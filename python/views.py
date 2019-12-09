@@ -65,7 +65,6 @@ def reg():
 def login():
 
     payload = request.json
-    print(payload)
     #账户email验证
     name = payload.get('name')
     user = session.query(User).filter(User.name == name).first()
@@ -91,7 +90,7 @@ def build():
     build_msg = depoly_msg = messages = ""
     #构建tgms and findreport
     try:
-        ssh.conn(REPO_ADDRESS, 'repo', 'Repo-401')
+        ssh.conn(REPO_ADDRESS, 'repo', '******')
         if buildname == 'tgms':
             for gl in ssh.line_buffered(ssh.Execmd('bash /home/repo/deploy.sh')):
                 print(gl)
@@ -110,17 +109,17 @@ def build():
         abort(Response("{}".format(messages),status=500))
     build_msg = 'Build {} Succeed'.format(buildname)
     #部署tgms and findreport
-    if address == '10.60.33.30' and buildname == 'findreport':
-        address = '10.60.33.24'
+    if address == '10.10.10.10' and buildname == 'findreport':
+        address = '10.10.10.11'
         buildname = 'fr'
     logging.info('****** {} {}'.format(address, buildname))
     try:
         if buildname == 'tgms':
-            ssh.conn(address,buildname,'Tgms-401')
+            ssh.conn(address,buildname,'******')
             for bl in ssh.line_buffered(ssh.Execmd('bash /home/tgms/bin/deploy.sh')):
                 print(bl)
         if buildname == 'findreport' or buildname == 'fr':
-            ssh.conn(address, buildname, 'Fr-401')
+            ssh.conn(address, buildname, '******')
             logging.info('========{} {}'.format(address, buildname))
             for bl in ssh.line_buffered(ssh.Execmd('bash /home/{}/repo/deploy.sh'.format(buildname))):
                 print(bl)
@@ -221,7 +220,7 @@ def code2build():
         # logging.info('********',username,path,proname)
         ssh = SSH()
         try:
-            ssh.conn(DK_ADDRESS, 'build', 'Nl1I!kqSE$U39H*WJHv') #连接build进行打包
+            ssh.conn(DK_ADDRESS, 'build', '******') #连接build进行打包
             for ss in ssh.line_buffered(ssh.Execmd('bash /home/build/code2build.sh {} {} {}'.format(path, username, spwd))):
                 print(ss)
         except Exception as e:
